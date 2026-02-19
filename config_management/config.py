@@ -1,7 +1,7 @@
 import logging
 
 from dataclasses import dataclass, field
-from typing import List
+from typing import List, Union
 
 from .enums import GPUType, Precision, Runtime
 
@@ -58,7 +58,8 @@ class ConfigurationManager:
         self.logger = logging.getLogger(__name__)
         self._registry = {}
 
-    def create_config(self, precision, gpu_type, runtime, **kwargs):
+    def create_config(self, precision: Precision, gpu_type: GPUType, runtime: Runtime, 
+                      **kwargs) -> InferenceConfig:
         config = InferenceConfig(precision, gpu_type, runtime, **kwargs)
         validation = self.validator.validate(config)
 
@@ -70,7 +71,8 @@ class ConfigurationManager:
 
         return config
 
-    def register_config(self, precision, gpu_type, runtime, name=None, **kwargs):
+    def register_config(self, precision: Precision, gpu_type: GPUType, runtime: Runtime, 
+                        name: Union[List, None] = None, **kwargs):
         try:
             config = self.create_config(precision, gpu_type, runtime, **kwargs)
             logging.info(f"Configuration {config.config_id} has been loaded")
@@ -80,8 +82,8 @@ class ConfigurationManager:
             logging.error(f"""Configuration with input parameters {precision}, {gpu_type}, 
                           {runtime} has failed with the following error: \n {e}""")
 
-    def get_config(self, name):
+    def get_config(self, name: str) -> InferenceConfig:
         return self._registry[name]
 
-    def list_configs(self):
+    def list_configs(self) -> List[str]:
         return list(self._registry.keys())
