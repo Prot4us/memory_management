@@ -36,9 +36,9 @@ class ConfigurationValidator:
                 # I think we should throw an error here in case. But to get it to run
                 # for the sake of the example, I decided to add a simple warning
                 # result.is_valid = False
-                #result.errors.append(
+                # result.errors.append(
                 #    f"BF16 needs compute >= 8.0, {config.gpu_type.value} has {config.gpu_type.compute_capability}"
-                #)
+                # )
                 result.warnings.append(
                    f"BF16 needs compute >= 8.0, {config.gpu_type.value} has {config.gpu_type.compute_capability}"
                 )
@@ -71,9 +71,14 @@ class ConfigurationManager:
         return config
 
     def register_config(self, precision, gpu_type, runtime, name=None, **kwargs):
-        config = self.create_config(precision, gpu_type, runtime, **kwargs)
-        name = name or config.config_id
-        self._registry[name] = config
+        try:
+            config = self.create_config(precision, gpu_type, runtime, **kwargs)
+            logging.info(f"Configuration {config.config_id} has been loaded")
+            name = name or config.config_id
+            self._registry[name] = config
+        except ValueError as e:
+            logging.error(f"""Configuration with input parameters {precision}, {gpu_type}, 
+                          {runtime} has failed with the following error: \n {e}""")
 
     def get_config(self, name):
         return self._registry[name]
