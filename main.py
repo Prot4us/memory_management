@@ -1,46 +1,54 @@
 import logging
+import torch
 import matplotlib.pyplot as plt
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
-)
-
-print(f"PyTorch: {torch.__version__}")
-print(f"CUDA: {torch.cuda.is_available()}")
-if torch.cuda.is_available():
-    print(f"Device: {torch.cuda.get_device_name(0)}")
-    print(f"Memory: {torch.cuda.get_device_properties(0).total_memory / 1024**3:.1f}GB")
-
-TEST_PROMPT = (
-    "Hundreds of paper lanterns drifting along a quiet river at dusk, "
-    "soft orange light piercing cold blue mist, reflections trembling "
-    "across rippled water, camera at water level with shallow DOF, "
-    "cinematic color contrast of warm and cool tones, shot on Sony Venice 2 "
-    "with Cooke S4 50mm lens, f/1.8, ISO 800, graded on Kodak 2383 film LUT"
-)
-TEST_SEED = 42
-
-print("TEST 1: FP16 Configuration")
-# Confirming the issues with fp16
-config_fp16 = config_mgr.create_config(
-    precision=Precision.FP16,
-    gpu_type=GPUType.T4,
-    runtime=Runtime.TORCH_NATIVE
-)
+from .config_management.enums import GPUType, Precision, Runtime
+from .config_management.config import ConfigurationManager
 
 
-# Change this for the correct configuration when running some tests
-pipeline_fp16 = create_pipeline(config_fp16)
-image_fp16 = pipeline_fp16.generate(TEST_PROMPT, seed=TEST_SEED)
-image_fp16.save("output_fp16.png")
+def main():
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(levelname)s - %(message)s'
+    )
 
-print(f"\n{pipeline_fp16.metrics}")
+    print(f"PyTorch: {torch.__version__}")
+    print(f"CUDA: {torch.cuda.is_available()}")
+    if torch.cuda.is_available():
+        print(f"Device: {torch.cuda.get_device_name(0)}")
+        print(f"Memory: {torch.cuda.get_device_properties(0).total_memory / 1024**3:.1f}GB")
 
-plt.figure(figsize=(10,10))
-plt.imshow(image_fp16)
-plt.axis('off')
-plt.title("FP16 Output")
-plt.show()
+    TEST_PROMPT = (
+        "Hundreds of paper lanterns drifting along a quiet river at dusk, "
+        "soft orange light piercing cold blue mist, reflections trembling "
+        "across rippled water, camera at water level with shallow DOF, "
+        "cinematic color contrast of warm and cool tones, shot on Sony Venice 2 "
+        "with Cooke S4 50mm lens, f/1.8, ISO 800, graded on Kodak 2383 film LUT"
+    )
+    TEST_SEED = 42
 
-pipeline_fp16.cleanup()
+    config_mgr = ConfigurationManager()
+
+    logging.info("Register and validate the configurations we want to test")
+
+    # Configurations to test:
+    # - FP32, FP16, BF16 with torch native
+    # - FP32, FP16 with torch.compile
+    l_config_fp_32 = {"precision": Precision.FP32, "gpu_type": GPUType.T4, "runtime": Runtime.TORCH_NATIVE}
+    l_config_fp_16 = {"precision": Precision.FP16, "gpu_type": GPUType.T4, "runtime": Runtime.TORCH_NATIVE}
+    l_config_bf_16 = {"precision": Precision.BF16, "gpu_type": GPUType.T4, "runtime": Runtime.TORCH_NATIVE}
+    l_config_fp_32_comp = {"precision": Precision.FP32, "gpu_type": GPUType.T4, "runtime": Runtime.TORCH_COMPILE}
+    l_config_fp_16_comp = {"precision": Precision.FP16, "gpu_type": GPUType.T4, "runtime": Runtime.TORCH_COMPILE}
+    configurations = [l_config_fp_32, l_config_fp_16, l_config_bf_16, l_config_fp_32_comp, l_config_fp_16_comp]
+    for config in configurations:
+        config_mgr.register_config(**config)
+
+    # Display current pipelines
+    logging.info(config_mgr.list_configs())
+
+
+    # Select a pipeline and run it
+
+
+if __name__ == "__main__":
+    main()
