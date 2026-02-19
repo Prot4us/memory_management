@@ -2,8 +2,8 @@ import logging
 import torch
 import matplotlib.pyplot as plt
 
-from .config_management.enums import GPUType, Precision, Runtime
-from .config_management.config import ConfigurationManager
+from config_management.enums import GPUType, Precision, Runtime
+from config_management.config import ConfigurationManager
 
 
 def main():
