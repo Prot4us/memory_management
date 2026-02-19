@@ -1,11 +1,14 @@
-# I decided to wrap the generate() into a class to simplify my life a bit
-
-import torchvision.transforms as T
+import logging
 import time
+import torch
+import torchvision.transforms as T
+
 from diffusers import AutoencoderKL, FlowMatchEulerDiscreteScheduler
 from diffusers.models.transformers import PRXTransformer2DModel
 from transformers import AutoTokenizer
 from transformers.models.t5gemma.modeling_t5gemma import T5GemmaEncoder
+
+from dataclasses import dataclass
 
 @dataclass
 class InferenceMetrics:
